@@ -1450,9 +1450,9 @@ export default class Chat extends Component {
     }
     return (
       <a
-        href={`/connect/${activeChannel.channel_modified_slug}`}
+        href={`/chat_channel_memberships/${activeChannel.id}/edit`}
         onClick={this.triggerActiveContent}
-        data-content={`chat_channels/${activeChannelId}`}
+        data-content='sidecar-chat_channel_membership'
       >
         {activeChannel.channel_name}
       </a>

@@ -1,0 +1,48 @@
+<div class="user-settings-page">
+  <h1><%= @channel.channel_name %></h1>
+  <div class="settings-form">
+    <div class="settings-form-userlist">
+      <h3>Members</h3>
+      <% @channel.active_users.each do |user| %>
+        <a class="settings-form-userlistrow" href="<%= user.path %>">
+          <img src="<%= ProfileImage.new(user).get(90) %>" /><%= user.name %>
+        </a>
+      <% end %>
+    </div>
+    <% if @membership.role == "mod" %>
+      <div class="settings-form-userlist">
+        <h3>Pending Invitations</h3>
+        <% @channel.pending_memberships.each do |membership| %>
+          <div class="settings-form-userlistrow" >
+            <a href="<%= membership.user.path %>"><img src="<%= ProfileImage.new(membership.user).get(90) %>" /><%= membership.user.name %></a>
+            <%= form_tag "/chat_channel_memberships/remove_invitation", class: "inline-button-form" do %>
+            <%= hidden_field_tag(:chat_channel_id, @channel.id) %>
+            <%= hidden_field_tag(:invitation_id, membership.id) %>
+            <%= submit_tag "×" %>
+          <% end %>
+          </div>
+        <% end %>
+      </div>
+      <%= form_for ChatChannelMembership.new do |f| %>
+        <div class="field">
+          <%= f.hidden_field :chat_channel_id, value: @channel.id %>
+          <%= f.label "Usernames to Invite" %>
+          <%= f.text_field :invitation_usernames, placeholder: "Comma separated" %>
+        </div>
+        <div class="field">
+          <%= f.submit "SUBMIT", class: "cta" %>
+        </div>
+      <% end %>
+    <% end %>
+    <h3>Personal Notification Settings</h3>
+    <%= form_for(@membership) do |f| %>
+      <div class="field">
+        <%= f.label :show_global_badge_notification %>
+        <%= f.check_box :show_global_badge_notification %>
+      </div>
+      <div class="field">
+        <%= f.submit "SUBMIT", class: "cta" %>
+      </div>
+    <% end %>
+  </div>
+</div>

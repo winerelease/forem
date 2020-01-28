@@ -11,18 +11,42 @@ class ChatChannelMembershipsController < ApplicationController
     )
   end
 
+  def edit
+    @membership = ChatChannelMembership.find(params[:id])
+    @channel = @membership.chat_channel
+    authorize @membership
+  end
+
   def create
-    @chat_channel = ChatChannel.find(permitted_params[:chat_channel_id])
+    membership_params = params[:chat_channel_membership]
+    @chat_channel = ChatChannel.find(membership_params[:chat_channel_id])
     authorize @chat_channel, :update?
-    ChatChannelMembership.create(
-      user_id: permitted_params[:user_id],
-      chat_channel_id: @chat_channel.id,
-      status: "pending",
-    )
+    membership_params[:invitation_usernames].split(",").each do |username_str|
+      ChatChannelMembership.create!(
+        user_id: User.find_by(username: username_str.delete(" ").delete("@")).id,
+        chat_channel_id: @chat_channel.id,
+        status: "pending",
+      )
+    end
     @chat_channel.index!
+    redirect_to "/chat_channel_memberships/#{@chat_channel.chat_channel_memberships.where(user_id: current_user).first&.id}/edit"
+  end
+
+  def remove_invitation
+    @chat_channel = ChatChannel.find(params[:chat_channel_id])
+    authorize @chat_channel, :update?
+    ChatChannelMembership.where(chat_channel_id: @chat_channel.id, id: params[:invitation_id], status: "pending").first&.destroy
+    redirect_to "/chat_channel_memberships/#{@chat_channel.chat_channel_memberships.where(user_id: current_user).first&.id}/edit"
   end
 
   def update
+    @chat_channel_membership = ChatChannelMembership.find(params[:id])
+    authorize @chat_channel_membership
+    @chat_channel_membership.update(permitted_params)
+    redirect_to "/chat_channel_memberships/#{@chat_channel_membership.id}/edit"
+  end
+
+  def invite
     @chat_channel_membership = ChatChannelMembership.find(params[:id])
     authorize @chat_channel_membership
     if permitted_params[:user_action] == "accept"
@@ -51,6 +75,6 @@ class ChatChannelMembershipsController < ApplicationController
   end
 
   def permitted_params
-    params.require(:chat_channel_membership).permit(:user_id, :chat_channel_id, :user_action, :id)
+    params.require(:chat_channel_membership).permit(:user_action, :show_global_badge_notification)
   end
 end

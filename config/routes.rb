@@ -156,7 +156,7 @@ Rails.application.routes.draw do
 
   resources :messages, only: [:create]
   resources :chat_channels, only: %i[index show create update]
-  resources :chat_channel_memberships, only: %i[create update destroy]
+  resources :chat_channel_memberships, only: %i[create edit update destroy]
   resources :articles, only: %i[update create destroy]
   resources :article_mutes, only: %i[update]
   resources :comments, only: %i[create update destroy] do
@@ -211,6 +211,8 @@ Rails.application.routes.draw do
   resolve("ProMembership") { [:pro_membership] } # see https://guides.rubyonrails.org/routing.html#using-resolve
 
   get "/chat_channel_memberships/find_by_chat_channel_id" => "chat_channel_memberships#find_by_chat_channel_id"
+  post "/chat_channel_memberships/remove_invitation" => "chat_channel_memberships#remove_invitation"
+
   get "/listings/dashboard" => "classified_listings#dashboard"
   get "/listings/:category" => "classified_listings#index"
   get "/listings/:category/:slug" => "classified_listings#index", :as => :classified_listing_slug
