@@ -1,27 +1,22 @@
 module Api
   module V0
-    class ReactionsController < ApiController
+    class ReactionsController < ApplicationController
       skip_before_action :verify_authenticity_token
-
       def create
-        reaction_user = load_reaction_user
-        unless reaction_user
-          render json: { error: "invalid user" }, status: :unprocessable_entity
+        @user = valid_user
+        unless @user
+          render json: { message: "invalid_user" }, status: :unprocessable_entity
           return
         end
-
-        @reaction = Reaction.create!(
-          user: reaction_user,
-          reactable_id: reaction_params[:reactable_id],
-          reactable_type: reaction_params[:reactable_type],
-          category: reaction_params[:category] || "like",
+        Rails.cache.delete "count_for_reactable-#{params[:reactable_type]}-#{params[:reactable_id]}"
+        @reaction = Reaction.create(
+          user_id: @user.id,
+          reactable_id: params[:reactable_id],
+          reactable_type: params[:reactable_type],
+          category: params[:category] || "like",
         )
-
-        delete_reactable_cache(reaction_params[:reactable_id], reaction_params[:reactable_type])
-
         Notification.send_reaction_notification(@reaction, @reaction.reactable.user)
-        Notification.send_reaction_notification(@reaction, @reaction.reactable.organization) if org_article?(@reaction)
-
+        Notification.send_reaction_notification(@reaction, @reaction.reactable.organization) if organization_article?(@reaction)
         render json: { reaction: @reaction.to_json }
       end
 
@@ -35,23 +30,14 @@ module Api
 
       private
 
-      def load_reaction_user
-        user = User.find_by!(secret: params[:key])
+      def valid_user
+        user = User.find_by(secret: params[:key])
         user = nil unless user.has_role?(:super_admin)
         user
       end
 
-      def delete_reactable_cache(reactable_id, reactable_type)
-        key = "count_for_reactable-#{reactable_type}-#{reactable_id}"
-        Rails.cache.delete(key)
-      end
-
-      def reaction_params
-        params.permit(:reactable_id, :reactable_type, :category)
-      end
-
-      def org_article?(reaction)
-        reaction.reactable.is_a?(Article) && reaction.reactable.organization
+      def organization_article?(reaction)
+        reaction.reactable_type == "Article" && reaction.reactable.organization_id
       end
     end
   end

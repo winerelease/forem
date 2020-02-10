@@ -11,14 +11,9 @@ class StripeActiveCardsController < ApplicationController
         "Your billing information has been updated"
     else
       logger.info("Stripe Add New Card Failure - #{current_user.username}")
-      DataDogStatsClient.increment("stripe.errors")
       redirect_to "/settings/billing", flash: { error:
         "There was a problem updating your billing info." }
     end
-  rescue Stripe::InvalidRequestError
-    DataDogStatsClient.increment("stripe.errors")
-    redirect_to "/settings/billing", flash: { error:
-        "There was a problem updating your billing info." }
   end
 
   def update
@@ -36,7 +31,6 @@ class StripeActiveCardsController < ApplicationController
         "There was a problem updating your billing info." }
     end
   rescue Stripe::CardError => e
-    DataDogStatsClient.increment("stripe.errors")
     flash[:error] = e.message
     redirect_to "/settings/billing"
   end

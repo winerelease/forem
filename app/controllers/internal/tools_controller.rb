@@ -16,7 +16,7 @@ class Internal::ToolsController < Internal::ApplicationController
                       end
     redirect_to "/internal/tools"
   rescue StandardError => e
-    flash[:danger] = e.message
+    flash[:danger] = e
     redirect_to "/internal/tools"
   end
 

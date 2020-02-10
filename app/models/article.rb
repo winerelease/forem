@@ -55,7 +55,6 @@ class Article < ApplicationRecord
   validates :video_closed_caption_track_url, url: { allow_blank: true, schemes: ["https"] }
   validates :video_source_url, url: { allow_blank: true, schemes: ["https"] }
 
-  after_update_commit :update_notifications, if: proc { |article| article.notifications.any? && !article.saved_changes.empty? }
   before_validation :evaluate_markdown
   before_validation :create_slug
   before_create     :create_password
@@ -64,11 +63,12 @@ class Article < ApplicationRecord
   before_save       :set_caches
   before_save       :fetch_video_duration
   before_save       :clean_data
-  after_commit      :async_score_calc
+  after_save        :async_score_calc, if: :published
   after_save        :bust_cache
-  after_commit      :update_main_image_background_hex
+  after_save        :update_main_image_background_hex
   after_save        :detect_human_language
   before_save       :update_cached_user
+  after_update      :update_notifications, if: proc { |article| article.notifications.any? && !article.saved_changes.empty? }
   before_destroy    :before_destroy_actions, prepend: true
 
   serialize :ids_for_suggested_articles
@@ -150,7 +150,7 @@ class Article < ApplicationRecord
                  :body_text, :tag_keywords_for_search, :search_score, :readable_publish_date, :flare_tag
       attribute :user do
         { username: user.username, name: user.name,
-          profile_image_90: ProfileImage.new(user).get(width: 90), pro: user.pro? }
+          profile_image_90: ProfileImage.new(user).get(90), pro: user.pro? }
       end
       tags do
         [tag_list,
@@ -180,13 +180,13 @@ class Article < ApplicationRecord
       attribute :user do
         { username: user.username,
           name: user.name,
-          profile_image_90: ProfileImage.new(user).get(width: 90) }
+          profile_image_90: ProfileImage.new(user).get(90) }
       end
       attribute :organization do
         if organization
           { slug: organization.slug,
             name: organization.name,
-            profile_image_90: ProfileImage.new(organization).get(width: 90) }
+            profile_image_90: ProfileImage.new(organization).get(90) }
         end
       end
       tags do
@@ -393,13 +393,6 @@ class Article < ApplicationRecord
     "articles-#{id}"
   end
 
-  def update_score
-    update_columns(score: reactions.sum(:points),
-                   comment_score: comments.sum(:score),
-                   hotness_score: BlackBox.article_hotness_score(self),
-                   spaminess_rating: BlackBox.calculate_spaminess(self))
-  end
-
   private
 
   def delete_related_objects
@@ -447,19 +440,17 @@ class Article < ApplicationRecord
   def update_main_image_background_hex
     return if main_image.blank? || main_image_background_hex_color != "#dddddd"
 
-    Articles::UpdateMainImageBackgroundHexWorker.perform_async(id)
+    Articles::UpdateMainImageBackgroundHexJob.perform_later(id)
   end
 
   def detect_human_language
     return if language.present?
 
-    update_column(:language, LanguageDetector.new(self).detect)
+    Articles::DetectHumanLanguageJob.perform_later(id)
   end
 
   def async_score_calc
-    return if !published? || destroyed?
-
-    Articles::ScoreCalcWorker.perform_async(id)
+    Articles::ScoreCalcJob.perform_later(id)
   end
 
   def fetch_video_duration

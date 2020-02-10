@@ -2,7 +2,7 @@ class ChatChannelMembershipsController < ApplicationController
   after_action :verify_authorized
 
   def find_by_chat_channel_id
-    @membership = ChatChannelMembership.where(chat_channel_id: params[:chat_channel_id], user_id: current_user.id).first!
+    @membership = ChatChannelMembership.where(chat_channel_id: params[:chat_channel_id], user_id: current_user.id).first
     authorize @membership
     render json: @membership.to_json(
       only: %i[id status viewable_by chat_channel_id last_opened_at],
@@ -28,6 +28,7 @@ class ChatChannelMembershipsController < ApplicationController
         status: "pending",
       )
     end
+    @chat_channel.index!
     redirect_to "/chat_channel_memberships/#{@chat_channel.chat_channel_memberships.where(user_id: current_user).first&.id}/edit"
   end
 
@@ -54,6 +55,7 @@ class ChatChannelMembershipsController < ApplicationController
     else
       @chat_channel_membership.update(status: "rejected")
     end
+    @chat_channel_membership.chat_channel.index!
     @chat_channels_memberships = current_user.
       chat_channel_memberships.includes(:chat_channel).
       where(status: "pending").
@@ -67,6 +69,7 @@ class ChatChannelMembershipsController < ApplicationController
     authorize @chat_channel_membership
     @chat_channel_membership.update(status: "left_channel")
     @chat_channel_membership.remove_from_index!
+    @chat_channel_membership.chat_channel.index!
     @chat_channels_memberships = []
     render json: { result: "left channel" }, status: :created
   end

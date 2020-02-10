@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import Navigation from './Navigation';
 import SlideContent from './SlideContent';
-import { updateOnboarding } from '../utilities';
+import { getContentOfToken } from '../utilities';
 
 class IntroSlide extends Component {
   constructor(props) {
@@ -13,7 +13,16 @@ class IntroSlide extends Component {
   }
 
   componentDidMount() {
-    updateOnboarding('intro slide');
+    const csrfToken = getContentOfToken('csrf-token');
+    fetch('/onboarding_update', {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user: { last_onboarding_page: 'intro slide' } }),
+      credentials: 'same-origin',
+    });
   }
 
   onSubmit() {

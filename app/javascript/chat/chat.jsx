@@ -1007,14 +1007,13 @@ export default class Chat extends Component {
       if (state.inviteChannels.length > 0) {
         invitesButton = (
           <div className="chat__channelinvitationsindicator">
-            <a
-              onClick={this.triggerActiveContent}
-              href="/benhalpern"
-              data-content="sidecar-user"
+            <button
+              onClick={this.triggerNonChatView}
+              data-content="invitations"
               type="button"
             >
               New Invitations!
-            </a>
+            </button>
           </div>
         );
       }
@@ -1473,7 +1472,7 @@ export default class Chat extends Component {
     const dataContent =
       activeChannel.channel_type === 'direct'
         ? 'sidecar-user'
-        : `sidecar-chat_channel_membership`;
+        : `chat_channels/${activeChannelId}`;
 
     return (
       <a
@@ -1483,7 +1482,7 @@ export default class Chat extends Component {
           if (e.keyCode === 13) this.triggerActiveContent(e);
         }}
         tabIndex="0"
-        href={`/${activeChannel.channel_username || `chat_channel_memberships/${activeChannel.id}/edit`}`}
+        href={`/${activeChannel.channel_username}`}
         data-content={dataContent}
       >
         <img

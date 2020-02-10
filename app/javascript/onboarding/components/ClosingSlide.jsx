@@ -1,11 +1,20 @@
 import { h, Component } from 'preact';
 import PropTypes from 'prop-types';
 
-import { updateOnboarding } from '../utilities';
+import { getContentOfToken } from '../utilities';
 
 class ClosingSlide extends Component {
   componentDidMount() {
-    updateOnboarding('closing slide');
+    const csrfToken = getContentOfToken('csrf-token');
+    fetch('/onboarding_update', {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user: { last_onboarding_page: 'closing slide' } }),
+      credentials: 'same-origin',
+    });
   }
 
   render() {
