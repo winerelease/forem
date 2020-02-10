@@ -683,16 +683,18 @@
   border-top: 1px solid $light-medium-gray;
 }
 
-.chat__channelinvitationsindicator button {
+.chat__channelinvitationsindicator a {
   background: $green;
   text-align: center;
-  padding: 10px 0px;
+  padding: 15px 0px;
   display: block;
   border-radius: 3px;
   margin: 3px 0px;
   border: 0px;
   width: 93%;
   font-size: 0.9em;
+  font-weight: bold;
+  color: white;
 }
 
 .chatchannels {

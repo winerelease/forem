@@ -5,7 +5,7 @@
       <h3>Members</h3>
       <% @channel.active_users.each do |user| %>
         <a class="settings-form-userlistrow" href="<%= user.path %>">
-          <img src="<%= ProfileImage.new(user).get(90) %>" /><%= user.name %>
+          <img src="<%= ProfileImage.new(user).get(width: 90) %>" /><%= user.name %>
         </a>
       <% end %>
     </div>
@@ -14,7 +14,7 @@
         <h3>Pending Invitations</h3>
         <% @channel.pending_memberships.each do |membership| %>
           <div class="settings-form-userlistrow" >
-            <a href="<%= membership.user.path %>"><img src="<%= ProfileImage.new(membership.user).get(90) %>" /><%= membership.user.name %></a>
+            <a href="<%= membership.user.path %>"><img src="<%= ProfileImage.new(membership.user).get(width: 90) %>" /><%= membership.user.name %></a>
             <%= form_tag "/chat_channel_memberships/remove_invitation", class: "inline-button-form" do %>
             <%= hidden_field_tag(:chat_channel_id, @channel.id) %>
             <%= hidden_field_tag(:invitation_id, membership.id) %>
@@ -34,7 +34,9 @@
         </div>
       <% end %>
     <% end %>
-    <h3>Personal Notification Settings</h3>
+    <hr class="settings-hr"/>
+    <h1>Personal Settings</h1>
+    <h3>Notifications</h3>
     <%= form_for(@membership) do |f| %>
       <div class="field">
         <%= f.label :show_global_badge_notification %>
@@ -42,6 +44,13 @@
       </div>
       <div class="field">
         <%= f.submit "SUBMIT", class: "cta" %>
+      </div>
+    <% end %>
+    <hr class="settings-hr"/>
+    <h3>Danger Zone</h3>
+    <%= form_for(@membership, html: { method: :delete } ) do |f| %>
+      <div class="field">
+        <%= f.submit "LEAVE CHANNEL", class: "cta cta-danger" %>
       </div>
     <% end %>
   </div>
