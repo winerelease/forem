@@ -16,17 +16,18 @@ export const FeaturedArticle = ({
   commentsIcon,
   bookmarkClick,
 }) => {
+  const mainImage = article.main_image ? <img
+    src={article.main_image}
+    style={{ display: 'none' }}
+    alt={article.title}
+  /> : ''
   return (
     <div>
       <div
         id="featured-story-marker"
         data-featured-article={`articles-${article.id}`}
       />
-      <img
-        src={article.main_image}
-        style={{ display: 'none' }}
-        alt={article.title}
-      />
+      {mainImage}
       <a
         href={article.path}
         id={`article-link-${article.id}`}
