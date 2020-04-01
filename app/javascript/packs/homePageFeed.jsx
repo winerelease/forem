@@ -101,7 +101,7 @@ export const renderFeed = timeFrame => {
               <PodcastEpisodes episodes={podcastEpisodes} />
             )}
             {(subStories || []).map(story => (
-              <Article
+              <FeaturedArticle
                 {...commonProps}
                 article={story}
                 isBookmarked={bookmarkedFeedItems.has(story.id)}

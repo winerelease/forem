@@ -11,7 +11,7 @@ class CloudCoverUrl
     return url if Rails.env.development? || Rails.env.test?
 
     width = 1000
-    height = 420
+    height = 1000
     quality = "auto"
 
     cl_image_path(url,
